@@ -279,15 +279,24 @@ async function startDatasette(settings) {
       true,
       false,
       {
-        rangeMapper: (absoluteFrom, absoluteTo) => {
+          rangeMapper: (absoluteFrom, absoluteTo) => {
+              let chunkId = Math.floor(absoluteFrom / 10485760);
+              let from = absoluteFrom % 10485760;
+              let to = absoluteTo % 10485760;
+              // Chunk ID is left padded with zeros to 4 digits
+              let chunkIdStr = chunkId.toString().padStart(4, '0');
+            //   Append chunkid str and bin to end of the url
+              let curl = `${url}.${chunkIdStr}.bin`;
           return {
-            fromByte: absoluteFrom,
-            toByte: absoluteTo,
-            url: url
+            fromByte: from,
+            toByte: to,
+            url: curl
           }
-      },
-      requestChunkSize: 12288,
-    })
+        },
+        fileLength: 29866496000,
+        requestChunkSize: 4096
+    }
+    )
   }
 
   await pyodide.loadPackage('micropip', log);
