@@ -279,11 +279,10 @@ async function startDatasette(settings) {
           true,
           false,
           {
-              maxReadSpeed: 4096,
               rangeMapper: (absoluteFrom, absoluteTo) => {
               let chunkId = Math.floor(absoluteFrom / 10485760);
               let from = absoluteFrom % 10485760;
-              let to = absoluteTo % 10485760;
+              let to = from + (absoluteTo - absoluteFrom);
               // Chunk ID is left padded with zeros to 4 digits
               let chunkIdStr = chunkId.toString().padStart(4, '0');
             //   Append chunkid str and bin to end of the url
