@@ -272,14 +272,15 @@ async function startDatasette(settings) {
   });
 
   for (let [name, url] of toMount) {
-    createLazyFile(
-      pyodide.FS,
-      '/home/pyodide',
-      name,
-      true,
-      false,
-      {
-          rangeMapper: (absoluteFrom, absoluteTo) => {
+      createLazyFile(
+          pyodide.FS,
+          '/home/pyodide',
+          name,
+          true,
+          false,
+          {
+              maxReadSpeed: 4096,
+              rangeMapper: (absoluteFrom, absoluteTo) => {
               let chunkId = Math.floor(absoluteFrom / 10485760);
               let from = absoluteFrom % 10485760;
               let to = absoluteTo % 10485760;
