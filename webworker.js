@@ -287,11 +287,13 @@ async function startDatasette(settings) {
                 let chunkIdStr = chunkId.toString().padStart(4, '0');
                 // Append chunkid str and bin to end of the url
                 let curl = `${url}.${chunkIdStr}.bin`;
-            return {
-                fromByte: from,
-                toByte: to,
-                url: curl
-            }
+                console.log(`[rangeMapper] ${absoluteFrom} ${absoluteTo} ${from} ${to} ${curl}`);
+
+                return {
+                    fromByte: from,
+                    toByte: to,
+                    url: curl
+                }
         },
         fileLength: 29866496000,
         requestChunkSize: 4096
