@@ -30,6 +30,7 @@ class LazyUint8Array {
           this._length = config.fileLength;
       }
       this.requestLimiter = config.requestLimiter == null ? ((ignored) => { }) : config.requestLimiter;
+      this.serverChunkSize = config.serverChunkSize;
   }
   /**
    * efficiently copy the range [start, start + length) from the http file into the
@@ -63,8 +64,11 @@ class LazyUint8Array {
           const fetchStartChunkNum = head.startChunk + head.speed;
           const newSpeed = Math.min(this.maxSpeed, head.speed * 2);
           const wantedIsInNextFetchOfHead = wantedChunkNum >= fetchStartChunkNum &&
-              wantedChunkNum < fetchStartChunkNum + newSpeed;
-          if (wantedIsInNextFetchOfHead) {
+            wantedChunkNum < fetchStartChunkNum + newSpeed;
+          const chunkPerServerChunk = (this.serverChunkSize / this.chunkSize)
+          const crosses_server_chunk_boundary = (wantedChunkNum % chunkPerServerChunk) < ((fetchStartChunkNum) % chunkPerServerChunk)
+
+          if (wantedIsInNextFetchOfHead && !crosses_server_chunk_boundary) {
               head.speed = newSpeed;
               head.startChunk = fetchStartChunkNum;
               if (i !== 0) {
@@ -271,7 +275,8 @@ async function startDatasette(settings) {
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.20.0/full/"
   });
 
-  for (let [name, url] of toMount) {
+    for (let [name, url] of toMount) {
+      const serverChunkSize = 10485760;
       createLazyFile(
           pyodide.FS,
           '/home/pyodide',
@@ -280,8 +285,8 @@ async function startDatasette(settings) {
           false,
           {
             rangeMapper: (absoluteFrom, absoluteTo) => {
-                let chunkId = Math.floor(absoluteFrom / 10485760);
-                let from = absoluteFrom % 10485760;
+                let chunkId = Math.floor(absoluteFrom / serverChunkSize);
+                let from = absoluteFrom % serverChunkSize;
                 let to = from + (absoluteTo - absoluteFrom);
                 // Chunk ID is left padded with zeros to 4 digits
                 let chunkIdStr = chunkId.toString().padStart(4, '0');
@@ -294,9 +299,10 @@ async function startDatasette(settings) {
                     toByte: to,
                     url: curl
                 }
-        },
-        fileLength: 29866496000,
-        requestChunkSize: 4096
+              },
+            serverChunkSize: serverChunkSize,
+            fileLength: 29866496000,
+            requestChunkSize: 4096
     }
     )
   }
